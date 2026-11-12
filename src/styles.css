@@ -45,6 +45,31 @@ body {
   gap: 8px;
 }
 
+.locale-toggle {
+  display: flex;
+}
+
+.locale-toggle button {
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.locale-toggle button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.locale-toggle button:last-child {
+  border-radius: 0 6px 6px 0;
+  margin-left: -1px;
+}
+
+.locale-toggle button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 button {
   background: #1f2937;
   color: var(--text);

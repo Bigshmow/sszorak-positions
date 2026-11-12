@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { CLASSES, classColor } from './classes';
+import { CLASS_IDS, classColor } from './classes';
+import { LOCALES, STRINGS, loadLocale, saveLocale, type Locale } from './i18n';
 import {
   BAIT_SLOT,
   BOARD_HEIGHT,
@@ -59,7 +60,8 @@ function saveAssignments(value: Assignments) {
 }
 
 interface FrameProps {
-  slot: Slot;
+  label: string;
+  locale: Locale;
   assignment: Assignment;
   editing: boolean;
   onChange: (next: Assignment) => void;
@@ -67,7 +69,8 @@ interface FrameProps {
   className?: string;
 }
 
-function RaidFrame({ slot, assignment, editing, onChange, style, className }: FrameProps) {
+function RaidFrame({ label, locale, assignment, editing, onChange, style, className }: FrameProps) {
+  const t = STRINGS[locale];
   const filled = assignment.name.trim() !== '' || assignment.classId !== '';
   const classes = ['frame', className, filled ? 'filled' : 'empty'].filter(Boolean).join(' ');
 
@@ -81,7 +84,7 @@ function RaidFrame({ slot, assignment, editing, onChange, style, className }: Fr
           <input
             className="frame-name"
             value={assignment.name}
-            placeholder={slot.label}
+            placeholder={label}
             maxLength={24}
             onChange={(e) => onChange({ ...assignment, name: e.target.value })}
           />
@@ -90,10 +93,10 @@ function RaidFrame({ slot, assignment, editing, onChange, style, className }: Fr
             value={assignment.classId}
             onChange={(e) => onChange({ ...assignment, classId: e.target.value })}
           >
-            <option value="">Class…</option>
-            {CLASSES.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
+            <option value="">{t.classPlaceholder}</option>
+            {CLASS_IDS.map((id) => (
+              <option key={id} value={id}>
+                {t.classes[id]}
               </option>
             ))}
           </select>
@@ -108,34 +111,55 @@ function RaidFrame({ slot, assignment, editing, onChange, style, className }: Fr
 export default function App() {
   const [assignments, setAssignments] = useState<Assignments>(loadAssignments);
   const [editing, setEditing] = useState(true);
+  const [locale, setLocale] = useState<Locale>(loadLocale);
   const { ref: fitRef, scale } = useFitScale(BOARD_WIDTH);
+  const t = STRINGS[locale];
 
   useEffect(() => saveAssignments(assignments), [assignments]);
 
-  const frameProps = (slot: Slot) => ({
-    slot,
+  useEffect(() => {
+    saveLocale(locale);
+    document.documentElement.lang = locale;
+    document.title = STRINGS[locale].pageTitle;
+  }, [locale]);
+
+  const frameProps = (slot: Slot, label: string) => ({
+    label,
+    locale,
     editing,
     assignment: assignments[slot.id] ?? EMPTY,
     onChange: (next: Assignment) => setAssignments((prev) => ({ ...prev, [slot.id]: next })),
   });
 
   const clearAll = () => {
-    if (window.confirm('Clear all names and classes?')) setAssignments({});
+    if (window.confirm(t.confirmClear)) setAssignments({});
   };
 
   return (
     <div className="page">
       <header className="toolbar">
-        <h1>Sszorak – Mythic Mechanic Spread Positions</h1>
+        <h1>{t.heading}</h1>
         <div className="toolbar-actions">
           <button onClick={() => setEditing((v) => !v)}>
-            {editing ? 'Screenshot view' : 'Edit names'}
+            {editing ? t.screenshotView : t.editNames}
           </button>
           {editing && (
             <button className="danger" onClick={clearAll}>
-              Clear all
+              {t.clearAll}
             </button>
           )}
+          <div className="locale-toggle" role="group" aria-label="Language">
+            {LOCALES.map((l) => (
+              <button
+                key={l}
+                className={l === locale ? 'active' : undefined}
+                aria-pressed={l === locale}
+                onClick={() => setLocale(l)}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -150,29 +174,33 @@ export default function App() {
         <main className={`board ${editing ? 'is-editing' : 'is-viewing'}`}>
           <aside className="side">
             <section>
-              <p className="note">Only 16 have to stack to trigger Virulence.</p>
-              <p className="note">Up to 4 can stay out — useful for healers to plant feet and heal.</p>
+              <p className="note">{t.stackNote}</p>
+              <p className="note">{t.stayOutNote}</p>
               <div className="side-frames">
-                {STAY_OUT_SLOTS.map((slot) => (
-                  <RaidFrame key={slot.id} className="side-frame" {...frameProps(slot)} />
+                {STAY_OUT_SLOTS.map((slot, i) => (
+                  <RaidFrame
+                    key={slot.id}
+                    className="side-frame"
+                    {...frameProps(slot, t.stayOutSlot(i + 1))}
+                  />
                 ))}
               </div>
-              <p className="note subtle">If anyone dies, these people adjust and stack with the group.</p>
+              <p className="note subtle">{t.deathNote}</p>
             </section>
             <section>
               <div className="side-frames">
-                <RaidFrame className="side-frame" {...frameProps(BAIT_SLOT)} />
+                <RaidFrame className="side-frame" {...frameProps(BAIT_SLOT, t.baitSlot)} />
               </div>
-              <p className="note">Runs far to bait Serpent's Fury.</p>
+              <p className="note">{t.baitNote}</p>
             </section>
           </aside>
 
           <div className="map">
-            <img className="map-image" src={asset('map.webp')} alt="Sszorak arena" />
+            <img className="map-image" src={asset('map.webp')} alt={t.mapAlt} />
             <img
               className="boss"
               src={asset('boss.png')}
-              alt="Boss tank spot"
+              alt={t.bossAlt}
               style={{ left: `${BOSS.x}%`, top: `${BOSS.y}%`, width: `${BOSS.width}%` }}
             />
             {MAP_SLOTS.map((slot) => (
@@ -185,7 +213,7 @@ export default function App() {
                   width: `${FRAME_WIDTH}%`,
                   height: `${FRAME_HEIGHT}%`,
                 }}
-                {...frameProps(slot)}
+                {...frameProps(slot, slot.label)}
               />
             ))}
           </div>

@@ -1,9 +1,9 @@
 export interface Slot {
   id: string;
-  label: string;
 }
 
 export interface MapSlot extends Slot {
+  label: string;
   x: number;
   y: number;
 }
@@ -40,10 +40,10 @@ export const MAP_SLOTS: MapSlot[] = [
 ];
 
 export const STAY_OUT_SLOTS: Slot[] = [
-  { id: 'out1', label: 'Out 1' },
-  { id: 'out2', label: 'Out 2' },
-  { id: 'out3', label: 'Out 3' },
-  { id: 'out4', label: 'Out 4' },
+  { id: 'out1' },
+  { id: 'out2' },
+  { id: 'out3' },
+  { id: 'out4' },
 ];
 
-export const BAIT_SLOT: Slot = { id: 'bait', label: 'Bait' };
+export const BAIT_SLOT: Slot = { id: 'bait' };
