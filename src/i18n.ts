@@ -10,7 +10,7 @@ interface Strings {
   heading: string;
   screenshotView: string;
   editNames: string;
-  clearAll: string;
+  clearNames: string;
   confirmAgain: string;
   moveFrames: string;
   doneMoving: string;
@@ -33,7 +33,7 @@ export const STRINGS: Record<Locale, Strings> = {
     heading: 'Sszorak – Mythic Mechanic Spread Positions',
     screenshotView: 'Screenshot view',
     editNames: 'Edit names',
-    clearAll: 'Clear all',
+    clearNames: 'Clear names',
     confirmAgain: 'Click again to confirm',
     moveFrames: 'Move frames',
     doneMoving: 'Done moving',
@@ -68,7 +68,7 @@ export const STRINGS: Record<Locale, Strings> = {
     heading: 'Sszorak – Posiciones de dispersión (mecánica mítica)',
     screenshotView: 'Vista para captura',
     editNames: 'Editar nombres',
-    clearAll: 'Borrar todo',
+    clearNames: 'Borrar nombres',
     confirmAgain: 'Haz clic otra vez para confirmar',
     moveFrames: 'Mover marcos',
     doneMoving: 'Terminar',

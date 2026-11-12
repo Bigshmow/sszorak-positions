@@ -149,7 +149,7 @@ export default function App() {
               <button onClick={() => setMode('view')}>{t.screenshotView}</button>
               <button onClick={() => setMode('move')}>{t.moveFrames}</button>
               <ConfirmButton
-                label={t.clearAll}
+                label={t.clearNames}
                 confirmLabel={t.confirmAgain}
                 onConfirm={() => setAssignments({})}
               />
