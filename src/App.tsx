@@ -1,5 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type HTMLAttributes,
+} from 'react';
 import { CLASS_IDS, classColor } from './classes';
+import { ConfirmButton } from './ConfirmButton';
 import { LOCALES, STRINGS, loadLocale, saveLocale, type Locale } from './i18n';
 import {
   BAIT_SLOT,
@@ -13,6 +21,8 @@ import {
   STAY_OUT_SLOTS,
   type Slot,
 } from './layout';
+import { readJson, writeJson } from './storage';
+import { useDrag, type HalfExtent, type Pos } from './useDrag';
 
 interface Assignment {
   name: string;
@@ -20,9 +30,15 @@ interface Assignment {
 }
 
 type Assignments = Record<string, Assignment>;
+type Positions = Record<string, Pos>;
+type Mode = 'edit' | 'move' | 'view';
 
-const STORAGE_KEY = 'sszorak-positions:v1';
+const ASSIGNMENTS_KEY = 'sszorak-positions:v1';
+const POSITIONS_KEY = 'sszorak-positions:layout:v1';
+const BOSS_ID = 'boss';
 const EMPTY: Assignment = { name: '', classId: '' };
+const FRAME_HALF: HalfExtent = { w: FRAME_WIDTH / 2, h: FRAME_HEIGHT / 2 };
+const BOSS_HALF: HalfExtent = { w: BOSS.width / 2, h: (BOSS.width * (61 / 89) * (16 / 9)) / 2 };
 const asset = (file: string) => `${import.meta.env.BASE_URL}${file}`;
 
 function useFitScale(designWidth: number) {
@@ -42,44 +58,26 @@ function useFitScale(designWidth: number) {
   return { ref, scale };
 }
 
-function loadAssignments(): Assignments {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Assignments) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveAssignments(value: Assignments) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-interface FrameProps {
+interface FrameProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
   label: string;
   locale: Locale;
+  mode: Mode;
   assignment: Assignment;
-  editing: boolean;
   onChange: (next: Assignment) => void;
-  style?: CSSProperties;
-  className?: string;
 }
 
-function RaidFrame({ label, locale, assignment, editing, onChange, style, className }: FrameProps) {
+function RaidFrame({ label, locale, mode, assignment, onChange, className, style, ...rest }: FrameProps) {
   const t = STRINGS[locale];
   const filled = assignment.name.trim() !== '' || assignment.classId !== '';
   const classes = ['frame', className, filled ? 'filled' : 'empty'].filter(Boolean).join(' ');
 
   return (
     <div
+      {...rest}
       className={classes}
       style={{ ...style, '--class-color': classColor(assignment.classId) } as CSSProperties}
     >
-      {editing ? (
+      {mode === 'edit' ? (
         <>
           <input
             className="frame-name"
@@ -102,20 +100,27 @@ function RaidFrame({ label, locale, assignment, editing, onChange, style, classN
           </select>
         </>
       ) : (
-        <span className="frame-name">{assignment.name}</span>
+        <span className="frame-name">{assignment.name || (mode === 'move' ? label : '')}</span>
       )}
     </div>
   );
 }
 
 export default function App() {
-  const [assignments, setAssignments] = useState<Assignments>(loadAssignments);
-  const [editing, setEditing] = useState(true);
+  const [assignments, setAssignments] = useState<Assignments>(() => readJson(ASSIGNMENTS_KEY, {}));
+  const [positions, setPositions] = useState<Positions>(() => readJson(POSITIONS_KEY, {}));
+  const [mode, setMode] = useState<Mode>('edit');
   const [locale, setLocale] = useState<Locale>(loadLocale);
   const { ref: fitRef, scale } = useFitScale(BOARD_WIDTH);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const { draggingId, dragProps } = useDrag(mapRef, (id, pos) =>
+    setPositions((prev) => ({ ...prev, [id]: pos })),
+  );
   const t = STRINGS[locale];
+  const moving = mode === 'move';
 
-  useEffect(() => saveAssignments(assignments), [assignments]);
+  useEffect(() => writeJson(ASSIGNMENTS_KEY, assignments), [assignments]);
+  useEffect(() => writeJson(POSITIONS_KEY, positions), [positions]);
 
   useEffect(() => {
     saveLocale(locale);
@@ -126,27 +131,42 @@ export default function App() {
   const frameProps = (slot: Slot, label: string) => ({
     label,
     locale,
-    editing,
+    mode,
     assignment: assignments[slot.id] ?? EMPTY,
     onChange: (next: Assignment) => setAssignments((prev) => ({ ...prev, [slot.id]: next })),
   });
 
-  const clearAll = () => {
-    if (window.confirm(t.confirmClear)) setAssignments({});
-  };
+  const bossPos = positions[BOSS_ID] ?? BOSS;
+  const dragClass = (id: string) => (moving ? (draggingId === id ? 'draggable dragging' : 'draggable') : '');
 
   return (
     <div className="page">
       <header className="toolbar">
         <h1>{t.heading}</h1>
         <div className="toolbar-actions">
-          <button onClick={() => setEditing((v) => !v)}>
-            {editing ? t.screenshotView : t.editNames}
-          </button>
-          {editing && (
-            <button className="danger" onClick={clearAll}>
-              {t.clearAll}
-            </button>
+          {mode === 'edit' && (
+            <>
+              <button onClick={() => setMode('view')}>{t.screenshotView}</button>
+              <button onClick={() => setMode('move')}>{t.moveFrames}</button>
+              <ConfirmButton
+                label={t.clearAll}
+                confirmLabel={t.confirmAgain}
+                onConfirm={() => setAssignments({})}
+              />
+            </>
+          )}
+          {mode === 'view' && <button onClick={() => setMode('edit')}>{t.editNames}</button>}
+          {moving && (
+            <>
+              <button className="primary" onClick={() => setMode('edit')}>
+                {t.doneMoving}
+              </button>
+              <ConfirmButton
+                label={t.resetPositions}
+                confirmLabel={t.confirmAgain}
+                onConfirm={() => setPositions({})}
+              />
+            </>
           )}
           <div className="locale-toggle" role="group" aria-label="Language">
             {LOCALES.map((l) => (
@@ -163,15 +183,19 @@ export default function App() {
         </div>
       </header>
 
-      <div ref={fitRef} className="board-fit" style={
+      <div
+        ref={fitRef}
+        className="board-fit"
+        style={
           {
             '--scale': scale,
             '--board-w': `${BOARD_WIDTH}px`,
             '--board-h': `${BOARD_HEIGHT}px`,
             '--side-w': `${SIDE_WIDTH}px`,
           } as CSSProperties
-        }>
-        <main className={`board ${editing ? 'is-editing' : 'is-viewing'}`}>
+        }
+      >
+        <main className={`board is-${mode}`}>
           <aside className="side">
             <section>
               <p className="note">{t.stackNote}</p>
@@ -195,27 +219,33 @@ export default function App() {
             </section>
           </aside>
 
-          <div className="map">
-            <img className="map-image" src={asset('map.webp')} alt={t.mapAlt} />
+          <div ref={mapRef} className="map">
+            <img className="map-image" src={asset('map.webp')} alt={t.mapAlt} draggable={false} />
             <img
-              className="boss"
+              className={`boss ${dragClass(BOSS_ID)}`}
               src={asset('boss.png')}
               alt={t.bossAlt}
-              style={{ left: `${BOSS.x}%`, top: `${BOSS.y}%`, width: `${BOSS.width}%` }}
+              draggable={false}
+              style={{ left: `${bossPos.x}%`, top: `${bossPos.y}%`, width: `${BOSS.width}%` }}
+              {...(moving ? dragProps(BOSS_ID, bossPos, BOSS_HALF) : {})}
             />
-            {MAP_SLOTS.map((slot) => (
-              <RaidFrame
-                key={slot.id}
-                className="map-frame"
-                style={{
-                  left: `${slot.x}%`,
-                  top: `${slot.y}%`,
-                  width: `${FRAME_WIDTH}%`,
-                  height: `${FRAME_HEIGHT}%`,
-                }}
-                {...frameProps(slot, slot.label)}
-              />
-            ))}
+            {MAP_SLOTS.map((slot) => {
+              const pos = positions[slot.id] ?? slot;
+              return (
+                <RaidFrame
+                  key={slot.id}
+                  className={`map-frame ${dragClass(slot.id)}`}
+                  style={{
+                    left: `${pos.x}%`,
+                    top: `${pos.y}%`,
+                    width: `${FRAME_WIDTH}%`,
+                    height: `${FRAME_HEIGHT}%`,
+                  }}
+                  {...frameProps(slot, slot.label)}
+                  {...(moving ? dragProps(slot.id, pos, FRAME_HALF) : {})}
+                />
+              );
+            })}
           </div>
         </main>
       </div>

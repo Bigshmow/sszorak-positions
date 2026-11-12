@@ -84,9 +84,21 @@ button:hover {
   border-color: var(--accent);
 }
 
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 button.danger:hover {
   border-color: var(--danger);
   color: #fca5a5;
+}
+
+button.danger.armed {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
 }
 
 .board-fit {
@@ -161,6 +173,28 @@ button.danger:hover {
   box-shadow: 0 0 12px rgb(0 0 0 / 0.8);
 }
 
+.draggable {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.draggable:hover {
+  outline: 2px dashed rgb(255 255 255 / 0.6);
+  outline-offset: 2px;
+}
+
+.draggable.dragging {
+  cursor: grabbing;
+  z-index: 10;
+  outline: 2px solid #fff;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.8);
+}
+
+.is-move .frame.empty .frame-name {
+  color: rgb(255 255 255 / 0.6);
+}
+
 .map-frame {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -180,7 +214,7 @@ button.danger:hover {
   overflow: hidden;
 }
 
-.is-viewing .frame.empty {
+.is-view .frame.empty {
   opacity: 0.35;
 }
 

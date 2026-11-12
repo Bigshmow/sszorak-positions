@@ -1,4 +1,5 @@
 import type { ClassId } from './classes';
+import { readStorage, writeStorage } from './storage';
 
 export type Locale = 'en' | 'es';
 
@@ -10,7 +11,10 @@ interface Strings {
   screenshotView: string;
   editNames: string;
   clearAll: string;
-  confirmClear: string;
+  confirmAgain: string;
+  moveFrames: string;
+  doneMoving: string;
+  resetPositions: string;
   stackNote: string;
   stayOutNote: string;
   deathNote: string;
@@ -30,7 +34,10 @@ export const STRINGS: Record<Locale, Strings> = {
     screenshotView: 'Screenshot view',
     editNames: 'Edit names',
     clearAll: 'Clear all',
-    confirmClear: 'Clear all names and classes?',
+    confirmAgain: 'Click again to confirm',
+    moveFrames: 'Move frames',
+    doneMoving: 'Done moving',
+    resetPositions: 'Reset positions',
     stackNote: 'Only 16 have to stack to trigger Virulence.',
     stayOutNote: 'Up to 4 can stay out — useful for healers to plant feet and heal.',
     deathNote: 'If anyone dies, these people adjust and stack with the group.',
@@ -62,7 +69,10 @@ export const STRINGS: Record<Locale, Strings> = {
     screenshotView: 'Vista para captura',
     editNames: 'Editar nombres',
     clearAll: 'Borrar todo',
-    confirmClear: '¿Borrar todos los nombres y clases?',
+    confirmAgain: 'Haz clic otra vez para confirmar',
+    moveFrames: 'Mover marcos',
+    doneMoving: 'Terminar',
+    resetPositions: 'Restablecer posiciones',
     stackNote: 'Solo 16 tienen que agruparse para activar Virulencia.',
     stayOutNote: 'Hasta 4 pueden quedarse fuera — útil para que los sanadores se queden quietos y curen.',
     deathNote: 'Si alguien muere, estas personas se ajustan y se agrupan con el resto.',
@@ -93,19 +103,11 @@ export const STRINGS: Record<Locale, Strings> = {
 const LOCALE_KEY = 'sszorak-positions:locale';
 
 export function loadLocale(): Locale {
-  try {
-    const saved = localStorage.getItem(LOCALE_KEY);
-    if (saved === 'en' || saved === 'es') return saved;
-  } catch {
-    /* storage unavailable */
-  }
+  const saved = readStorage(LOCALE_KEY);
+  if (saved === 'en' || saved === 'es') return saved;
   return navigator.language.toLowerCase().startsWith('es') ? 'es' : 'en';
 }
 
 export function saveLocale(locale: Locale) {
-  try {
-    localStorage.setItem(LOCALE_KEY, locale);
-  } catch {
-    /* storage unavailable */
-  }
+  writeStorage(LOCALE_KEY, locale);
 }
