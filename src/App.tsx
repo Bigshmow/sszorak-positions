@@ -142,12 +142,12 @@ export default function App() {
           {mapLoaded ? (
             <img
               className="map-image"
-              src={`${import.meta.env.BASE_URL}map.png`}
+              src={`${import.meta.env.BASE_URL}map.webp`}
               alt="Sszorak arena"
               onError={() => setMapLoaded(false)}
             />
           ) : (
-            <div className="map-placeholder">Add the arena image as public/map.png</div>
+            <div className="map-placeholder">Add the arena image as public/map.webp</div>
           )}
           {MAP_SLOTS.map((slot) => (
             <RaidFrame

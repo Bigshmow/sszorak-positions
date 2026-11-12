@@ -21,7 +21,7 @@ body {
 }
 
 .page {
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 16px;
 }
@@ -66,7 +66,7 @@ button.danger:hover {
 
 .board {
   display: grid;
-  grid-template-columns: minmax(180px, 22%) 1fr;
+  grid-template-columns: minmax(180px, 16%) 1fr;
   background: var(--panel);
 }
 
