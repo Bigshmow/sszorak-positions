@@ -1,11 +1,14 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { CLASSES, classColor } from './classes';
 import {
   BAIT_SLOT,
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  BOSS,
   FRAME_HEIGHT,
   FRAME_WIDTH,
-  MAP_ASPECT,
   MAP_SLOTS,
+  SIDE_WIDTH,
   STAY_OUT_SLOTS,
   type Slot,
 } from './layout';
@@ -19,6 +22,24 @@ type Assignments = Record<string, Assignment>;
 
 const STORAGE_KEY = 'sszorak-positions:v1';
 const EMPTY: Assignment = { name: '', classId: '' };
+const asset = (file: string) => `${import.meta.env.BASE_URL}${file}`;
+
+function useFitScale(designWidth: number) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = (width: number) => setScale(Math.min(1, width / designWidth));
+    fit(el.clientWidth);
+    const observer = new ResizeObserver(([entry]) => fit(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [designWidth]);
+
+  return { ref, scale };
+}
 
 function loadAssignments(): Assignments {
   try {
@@ -87,7 +108,7 @@ function RaidFrame({ slot, assignment, editing, onChange, style, className }: Fr
 export default function App() {
   const [assignments, setAssignments] = useState<Assignments>(loadAssignments);
   const [editing, setEditing] = useState(true);
-  const [mapLoaded, setMapLoaded] = useState(true);
+  const { ref: fitRef, scale } = useFitScale(BOARD_WIDTH);
 
   useEffect(() => saveAssignments(assignments), [assignments]);
 
@@ -118,52 +139,58 @@ export default function App() {
         </div>
       </header>
 
-      <main className={`board ${editing ? 'is-editing' : 'is-viewing'}`}>
-        <aside className="side">
-          <section>
-            <p className="note">Only 16 have to stack to trigger Virulence.</p>
-            <p className="note">Up to 4 can stay out — useful for healers to plant feet and heal.</p>
-            <div className="side-frames">
-              {STAY_OUT_SLOTS.map((slot) => (
-                <RaidFrame key={slot.id} className="side-frame" {...frameProps(slot)} />
-              ))}
-            </div>
-            <p className="note subtle">If anyone dies, these people adjust and stack with the group.</p>
-          </section>
-          <section>
-            <div className="side-frames">
-              <RaidFrame className="side-frame" {...frameProps(BAIT_SLOT)} />
-            </div>
-            <p className="note">Runs far to bait Serpent's Fury.</p>
-          </section>
-        </aside>
+      <div ref={fitRef} className="board-fit" style={
+          {
+            '--scale': scale,
+            '--board-w': `${BOARD_WIDTH}px`,
+            '--board-h': `${BOARD_HEIGHT}px`,
+            '--side-w': `${SIDE_WIDTH}px`,
+          } as CSSProperties
+        }>
+        <main className={`board ${editing ? 'is-editing' : 'is-viewing'}`}>
+          <aside className="side">
+            <section>
+              <p className="note">Only 16 have to stack to trigger Virulence.</p>
+              <p className="note">Up to 4 can stay out — useful for healers to plant feet and heal.</p>
+              <div className="side-frames">
+                {STAY_OUT_SLOTS.map((slot) => (
+                  <RaidFrame key={slot.id} className="side-frame" {...frameProps(slot)} />
+                ))}
+              </div>
+              <p className="note subtle">If anyone dies, these people adjust and stack with the group.</p>
+            </section>
+            <section>
+              <div className="side-frames">
+                <RaidFrame className="side-frame" {...frameProps(BAIT_SLOT)} />
+              </div>
+              <p className="note">Runs far to bait Serpent's Fury.</p>
+            </section>
+          </aside>
 
-        <div className="map" style={mapLoaded ? undefined : { aspectRatio: MAP_ASPECT }}>
-          {mapLoaded ? (
+          <div className="map">
+            <img className="map-image" src={asset('map.webp')} alt="Sszorak arena" />
             <img
-              className="map-image"
-              src={`${import.meta.env.BASE_URL}map.webp`}
-              alt="Sszorak arena"
-              onError={() => setMapLoaded(false)}
+              className="boss"
+              src={asset('boss.png')}
+              alt="Boss tank spot"
+              style={{ left: `${BOSS.x}%`, top: `${BOSS.y}%`, width: `${BOSS.width}%` }}
             />
-          ) : (
-            <div className="map-placeholder">Add the arena image as public/map.webp</div>
-          )}
-          {MAP_SLOTS.map((slot) => (
-            <RaidFrame
-              key={slot.id}
-              className="map-frame"
-              style={{
-                left: `${slot.x}%`,
-                top: `${slot.y}%`,
-                width: `${FRAME_WIDTH}%`,
-                height: `${FRAME_HEIGHT}%`,
-              }}
-              {...frameProps(slot)}
-            />
-          ))}
-        </div>
-      </main>
+            {MAP_SLOTS.map((slot) => (
+              <RaidFrame
+                key={slot.id}
+                className="map-frame"
+                style={{
+                  left: `${slot.x}%`,
+                  top: `${slot.y}%`,
+                  width: `${FRAME_WIDTH}%`,
+                  height: `${FRAME_HEIGHT}%`,
+                }}
+                {...frameProps(slot)}
+              />
+            ))}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

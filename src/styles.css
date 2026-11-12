@@ -64,9 +64,19 @@ button.danger:hover {
   color: #fca5a5;
 }
 
+.board-fit {
+  width: 100%;
+  height: calc(var(--board-h) * var(--scale));
+  overflow: hidden;
+}
+
 .board {
   display: grid;
-  grid-template-columns: minmax(180px, 16%) 1fr;
+  grid-template-columns: var(--side-w) 1fr;
+  width: var(--board-w);
+  height: var(--board-h);
+  transform: scale(var(--scale));
+  transform-origin: top left;
   background: var(--panel);
 }
 
@@ -107,25 +117,23 @@ button.danger:hover {
 
 .map {
   position: relative;
-  container-type: inline-size;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
 }
 
 .map-image {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.map-placeholder {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--muted);
-  background:
-    radial-gradient(circle at 50% 55%, #2b3a2f 0%, #141a16 70%),
-    #141a16;
+  width: 100%;
+  height: 100%;
+}
+
+.boss {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 3px solid #b91c1c;
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgb(0 0 0 / 0.8);
 }
 
 .map-frame {
@@ -155,7 +163,7 @@ button.danger:hover {
   width: 100%;
   min-width: 0;
   font-weight: 700;
-  font-size: clamp(10px, 1.6cqi, 18px);
+  font-size: 16px;
   color: #fff;
   text-shadow:
     -1px -1px 0 #000,
@@ -197,18 +205,4 @@ input.frame-name:focus {
   color: #fff;
   border: 1px solid rgb(255 255 255 / 0.2);
   border-radius: 3px;
-}
-
-@media (max-width: 760px) {
-  .board {
-    grid-template-columns: 1fr;
-  }
-
-  .map {
-    order: -1;
-  }
-
-  .frame-class {
-    font-size: 9px;
-  }
 }
