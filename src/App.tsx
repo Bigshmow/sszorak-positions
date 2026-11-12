@@ -126,7 +126,7 @@ export default function App() {
   return (
     <div className="page">
       <header className="toolbar">
-        <h1>Sszorak – Pre-pull Positions</h1>
+        <h1>Sszorak – Mythic Mechanic Spread Positions</h1>
         <div className="toolbar-actions">
           <button onClick={() => setEditing((v) => !v)}>
             {editing ? 'Screenshot view' : 'Edit names'}
