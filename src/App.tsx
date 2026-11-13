@@ -27,6 +27,7 @@ import { readJson, writeJson } from './storage';
 import type { Assignment, Assignments, Positions } from './types';
 import { useDrag, type HalfExtent } from './useDrag';
 import { useShareLink } from './useShareLink';
+import { ImportPanel } from './import/ImportPanel';
 
 type Mode = 'edit' | 'move' | 'view';
 
@@ -112,6 +113,7 @@ export default function App() {
   );
   const [mode, setMode] = useState<Mode>(shared ? 'view' : 'edit');
   const { copyStatus, copyLink } = useShareLink({ assignments, positions });
+  const [importOpen, setImportOpen] = useState(false);
   const [locale, setLocale] = useState<Locale>(loadLocale);
   const { ref: fitRef, scale } = useFitScale(BOARD_WIDTH);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -150,6 +152,7 @@ export default function App() {
           {mode === 'edit' && (
             <>
               <button onClick={() => setMode('view')}>{t.screenshotView}</button>
+              <button onClick={() => setImportOpen(true)}>{t.importFrames}</button>
               <button onClick={() => setMode('move')}>{t.moveFrames}</button>
               <ConfirmButton
                 label={t.clearNames}
@@ -257,6 +260,9 @@ export default function App() {
           </div>
         </main>
       </div>
+      {importOpen && (
+        <ImportPanel locale={locale} onFill={setAssignments} onClose={() => setImportOpen(false)} />
+      )}
     </div>
   );
 }
