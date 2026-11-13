@@ -12,6 +12,9 @@ interface Strings {
   editNames: string;
   clearNames: string;
   confirmAgain: string;
+  copyLink: string;
+  linkCopied: string;
+  copyFromAddressBar: string;
   moveFrames: string;
   doneMoving: string;
   resetPositions: string;
@@ -35,6 +38,9 @@ export const STRINGS: Record<Locale, Strings> = {
     editNames: 'Edit names',
     clearNames: 'Clear names',
     confirmAgain: 'Click again to confirm',
+    copyLink: 'Copy share link',
+    linkCopied: 'Link copied!',
+    copyFromAddressBar: 'Copy it from the address bar',
     moveFrames: 'Move frames',
     doneMoving: 'Done moving',
     resetPositions: 'Reset positions',
@@ -70,6 +76,9 @@ export const STRINGS: Record<Locale, Strings> = {
     editNames: 'Editar nombres',
     clearNames: 'Borrar nombres',
     confirmAgain: 'Haz clic otra vez para confirmar',
+    copyLink: 'Copiar enlace',
+    linkCopied: '¡Enlace copiado!',
+    copyFromAddressBar: 'Cópialo de la barra de direcciones',
     moveFrames: 'Mover marcos',
     doneMoving: 'Terminar',
     resetPositions: 'Restablecer posiciones',

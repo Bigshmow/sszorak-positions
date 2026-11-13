@@ -14,6 +14,7 @@ export const BOARD_WIDTH = 1600;
 export const SIDE_WIDTH = 260;
 export const BOARD_HEIGHT = Math.round(((BOARD_WIDTH - SIDE_WIDTH) * 9) / 16);
 
+export const BOSS_ID = 'boss';
 export const BOSS = { x: 50.5, y: 69.5, width: 7 };
 
 export const MAP_SLOTS: MapSlot[] = [
@@ -47,3 +48,11 @@ export const STAY_OUT_SLOTS: Slot[] = [
 ];
 
 export const BAIT_SLOT: Slot = { id: 'bait' };
+
+// Share links refer to slots by index into this list: only append, never reorder.
+export const SHAREABLE_IDS: string[] = [
+  ...MAP_SLOTS.map((s) => s.id),
+  ...STAY_OUT_SLOTS.map((s) => s.id),
+  BAIT_SLOT.id,
+  BOSS_ID,
+];

@@ -14,6 +14,7 @@ import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   BOSS,
+  BOSS_ID,
   FRAME_HEIGHT,
   FRAME_WIDTH,
   MAP_SLOTS,
@@ -21,21 +22,16 @@ import {
   STAY_OUT_SLOTS,
   type Slot,
 } from './layout';
+import { readSharedFromUrl } from './share';
 import { readJson, writeJson } from './storage';
-import { useDrag, type HalfExtent, type Pos } from './useDrag';
+import type { Assignment, Assignments, Positions } from './types';
+import { useDrag, type HalfExtent } from './useDrag';
+import { useShareLink } from './useShareLink';
 
-interface Assignment {
-  name: string;
-  classId: string;
-}
-
-type Assignments = Record<string, Assignment>;
-type Positions = Record<string, Pos>;
 type Mode = 'edit' | 'move' | 'view';
 
 const ASSIGNMENTS_KEY = 'sszorak-positions:v1';
 const POSITIONS_KEY = 'sszorak-positions:layout:v1';
-const BOSS_ID = 'boss';
 const EMPTY: Assignment = { name: '', classId: '' };
 const FRAME_HALF: HalfExtent = { w: FRAME_WIDTH / 2, h: FRAME_HEIGHT / 2 };
 const BOSS_HALF: HalfExtent = { w: BOSS.width / 2, h: (BOSS.width * (61 / 89) * (16 / 9)) / 2 };
@@ -107,9 +103,15 @@ function RaidFrame({ label, locale, mode, assignment, onChange, className, style
 }
 
 export default function App() {
-  const [assignments, setAssignments] = useState<Assignments>(() => readJson(ASSIGNMENTS_KEY, {}));
-  const [positions, setPositions] = useState<Positions>(() => readJson(POSITIONS_KEY, {}));
-  const [mode, setMode] = useState<Mode>('edit');
+  const [shared] = useState(readSharedFromUrl);
+  const [assignments, setAssignments] = useState<Assignments>(
+    () => shared?.assignments ?? readJson(ASSIGNMENTS_KEY, {}),
+  );
+  const [positions, setPositions] = useState<Positions>(
+    () => shared?.positions ?? readJson(POSITIONS_KEY, {}),
+  );
+  const [mode, setMode] = useState<Mode>(shared ? 'view' : 'edit');
+  const { copyStatus, copyLink } = useShareLink({ assignments, positions });
   const [locale, setLocale] = useState<Locale>(loadLocale);
   const { ref: fitRef, scale } = useFitScale(BOARD_WIDTH);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -136,6 +138,7 @@ export default function App() {
     onChange: (next: Assignment) => setAssignments((prev) => ({ ...prev, [slot.id]: next })),
   });
 
+  const copyLabel = { idle: t.copyLink, copied: t.linkCopied, failed: t.copyFromAddressBar }[copyStatus];
   const bossPos = positions[BOSS_ID] ?? BOSS;
   const dragClass = (id: string) => (moving ? (draggingId === id ? 'draggable dragging' : 'draggable') : '');
 
@@ -156,6 +159,11 @@ export default function App() {
             </>
           )}
           {mode === 'view' && <button onClick={() => setMode('edit')}>{t.editNames}</button>}
+          {!moving && (
+            <button className={copyStatus === 'copied' ? 'primary' : undefined} onClick={copyLink}>
+              {copyLabel}
+            </button>
+          )}
           {moving && (
             <>
               <button className="primary" onClick={() => setMode('edit')}>
