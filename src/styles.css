@@ -149,7 +149,30 @@ button.danger.armed {
 }
 
 .side-frame {
+  position: relative;
   height: 52px;
+}
+
+.frame-clear {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: #fff;
+  background: rgb(0 0 0 / 0.55);
+  border: 1px solid rgb(255 255 255 / 0.25);
+  border-radius: 3px;
+}
+
+.frame-clear:hover {
+  background: var(--danger);
+  border-color: var(--danger);
 }
 
 .map {

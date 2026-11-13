@@ -52,12 +52,12 @@ export const BAIT_SLOT: Slot = { id: 'bait' };
 export const AUTO_FILL = {
   baitSpot: 'm1',
   baitClassPriority: ['mage', 'warlock', 'evoker', 'hunter'],
-  tankSpots: { odd: 'm16', even: 'm17' },
+  tankSpots: { odd: 'm19', even: 'm6' },
   sides: {
-    odd: ['m2', 'm4', 'm7', 'm10', 'm12', 'm14', 'm18'],
-    even: ['m3', 'm5', 'm8', 'm11', 'm13', 'm15', 'm20'],
+    odd: ['m2', 'm4', 'm7', 'm10', 'm12', 'm14', 'm16', 'm18'],
+    even: ['m3', 'm5', 'm8', 'm11', 'm13', 'm15', 'm17', 'm20'],
   },
-  middle: ['m6', 'm9', 'm19'],
+  middle: ['m9'],
 } as const;
 
 // Share links refer to slots by index into this list: only append, never reorder.

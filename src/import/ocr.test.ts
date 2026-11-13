@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { PNG } from 'pngjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Worker } from 'tesseract.js';
-import { detectGrid, nameStrip } from './analyze';
-import { cleanName, createOcrWorker, readName } from './ocr';
+import { detectGrid, nameStripVariants } from './analyze';
+import { cleanName, createOcrWorker, readNames } from './ocr';
 import type { Pixels } from './pixels';
 
 const toPng = (p: Pixels) => {
@@ -36,9 +36,8 @@ describe.skipIf(import.meta.env.MODE !== 'ocr')('name OCR on real screenshots (d
 
   const readAll = async (fixture: string) => {
     const px = PNG.sync.read(readFileSync(`test-fixtures/${fixture}`)) as Pixels;
-    const names: string[] = [];
-    for (const cell of detectGrid(px).flat()) names.push(await readName(worker, toPng(nameStrip(px, cell))));
-    return names;
+    const variants = nameStripVariants(px, detectGrid(px).flat());
+    return readNames(worker, variants.map((strips) => strips.map(toPng)));
   };
 
   it('reads every name in the clean screenshot', async () => {
@@ -51,5 +50,15 @@ describe.skipIf(import.meta.env.MODE !== 'ocr')('name OCR on real screenshots (d
     NAMES.forEach((name, i) => {
       if (!MARKED.has(name)) expect(names[i]).toBe(name);
     });
+  }, 120000);
+
+  it('reads a thin-font frame style, except names under raid markers or with heavy accents', async () => {
+    const names = await readAll('raid-frames-3.png');
+    const expected: Record<number, string> = {
+      0: 'Theelyas', 2: 'Henyheny', 3: 'Tongpooh', 4: 'Zombyra', 5: 'Billetin', 8: 'Shmowman', 9: 'Stormyen',
+      10: 'Alyzane', 11: 'Betasha', 12: 'Akassa', 13: 'Chairowar', 14: 'Kasher', 15: 'Ddpaladini',
+      16: 'Flexhack', 17: 'Lumisara', 18: 'Skadi',
+    };
+    for (const [i, name] of Object.entries(expected)) expect(names[Number(i)]).toBe(name);
   }, 120000);
 });

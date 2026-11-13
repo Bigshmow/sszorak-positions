@@ -95,6 +95,16 @@ function RaidFrame({ label, locale, mode, assignment, onChange, className, style
               </option>
             ))}
           </select>
+          {filled && (
+            <button
+              className="frame-clear"
+              aria-label={t.clearFrame}
+              title={t.clearFrame}
+              onClick={() => onChange(EMPTY)}
+            >
+              ×
+            </button>
+          )}
         </>
       ) : (
         <span className="frame-name">{assignment.name || (mode === 'move' ? label : '')}</span>

@@ -26,6 +26,7 @@ interface Strings {
   stayOutSlot: (n: number) => string;
   baitSlot: string;
   classPlaceholder: string;
+  clearFrame: string;
   mapAlt: string;
   bossAlt: string;
   classes: Record<ClassId, string>;
@@ -65,6 +66,7 @@ export const STRINGS: Record<Locale, Strings> = {
     stayOutSlot: (n) => `Out ${n}`,
     baitSlot: 'Bait',
     classPlaceholder: 'Class…',
+    clearFrame: 'Clear this frame',
     mapAlt: 'Sszorak arena',
     bossAlt: 'Boss tank spot',
     classes: {
@@ -94,7 +96,7 @@ export const STRINGS: Record<Locale, Strings> = {
     groupLabel: (n) => `Group ${n}`,
     roles: { tank: 'Tank', healer: 'Healer', dps: 'DPS' },
     importNote:
-      'Spot 1 and Bait get the first Mage, Warlock, Evoker or Hunter. Tanks go to 16 (groups 1 and 3) and 17 (groups 2 and 4). Healers are also listed in the Out spots.',
+      'Spot 1 and Bait get the first Mage, Warlock, Evoker or Hunter. Tanks go to 6 (groups 2 and 4) and 19 (groups 1 and 3). Healers are also listed in the Out spots.',
     fillBoard: 'Fill board',
     cancel: 'Cancel',
   },
@@ -118,6 +120,7 @@ export const STRINGS: Record<Locale, Strings> = {
     stayOutSlot: (n) => `Fuera ${n}`,
     baitSlot: 'Cebo',
     classPlaceholder: 'Clase…',
+    clearFrame: 'Vaciar este marco',
     mapAlt: 'Arena de Sszorak',
     bossAlt: 'Posición del jefe',
     classes: {
@@ -147,7 +150,7 @@ export const STRINGS: Record<Locale, Strings> = {
     groupLabel: (n) => `Grupo ${n}`,
     roles: { tank: 'Tanque', healer: 'Sanador', dps: 'DPS' },
     importNote:
-      'La posición 1 y el Cebo son para el primer Mago, Brujo, Evocador o Cazador. Los tanques van a la 16 (grupos 1 y 3) y a la 17 (grupos 2 y 4). Los sanadores también aparecen en las posiciones Fuera.',
+      'La posición 1 y el Cebo son para el primer Mago, Brujo, Evocador o Cazador. Los tanques van a la 6 (grupos 2 y 4) y a la 19 (grupos 1 y 3). Los sanadores también aparecen en las posiciones Fuera.',
     fillBoard: 'Rellenar tablero',
     cancel: 'Cancelar',
   },

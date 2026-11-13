@@ -30,19 +30,19 @@ describe('autoFill', () => {
     expect(result.bait).toEqual(result.m1);
   });
 
-  it('puts tanks on their side tank spot', () => {
-    expect(result.m16?.name).toBe('Sheldz');
-    expect(result.m17?.name).toBe('Carmasan');
+  it('puts group 2/4 tanks on spot 6 and group 1/3 tanks on spot 19', () => {
+    expect(result.m6?.name).toBe('Carmasan');
+    expect(result.m19?.name).toBe('Sheldz');
   });
 
   it('sends odd groups left, even groups right, overflow to the middle', () => {
-    expect(names(result, ['m2', 'm4', 'm7', 'm10', 'm12', 'm14', 'm18'])).toEqual([
-      'Zombyra', 'Theelyas', 'Tongpooh', 'Henyheny', 'Akassa', 'Alyzane', 'Betasha',
+    expect(names(result, ['m2', 'm4', 'm7', 'm10', 'm12', 'm14', 'm16', 'm18'])).toEqual([
+      'Zombyra', 'Theelyas', 'Tongpooh', 'Henyheny', 'Akassa', 'Alyzane', 'Betasha', 'Chairowar',
     ]);
-    expect(names(result, ['m3', 'm5', 'm8', 'm11', 'm13', 'm15', 'm20'])).toEqual([
-      'Billetin', 'Galaen', 'Stormyen', 'Lumisara', 'Flexhack', 'Suggarquee', 'Ddpaladini',
+    expect(names(result, ['m3', 'm5', 'm8', 'm11', 'm13', 'm15', 'm17', 'm20'])).toEqual([
+      'Billetin', 'Galaen', 'Stormyen', 'Lumisara', 'Flexhack', 'Suggarquee', 'Ddpaladini', 'Skadi',
     ]);
-    expect(names(result, ['m6', 'm9', 'm19'])).toEqual(['Chairowar', 'Kasher', 'Skadi']);
+    expect(result.m9?.name).toBe('Kasher');
   });
 
   it('also lists the healers in the Out spots', () => {
@@ -58,8 +58,8 @@ describe('autoFill', () => {
 
   it('moves a second same-side tank to the other tank spot', () => {
     const r = autoFill(raid([[['TankA', 'warrior', 'tank'], ['Filler', 'rogue', 'dps']], [], [['TankB', 'paladin', 'tank']]]));
-    expect(r.m16?.name).toBe('TankA');
-    expect(r.m17?.name).toBe('TankB');
+    expect(r.m19?.name).toBe('TankA');
+    expect(r.m6?.name).toBe('TankB');
   });
 
   it('still fills spot 1 when nobody can bait, and leaves the bait box empty', () => {

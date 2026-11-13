@@ -18,7 +18,40 @@ export async function createOcrWorker(options: Partial<WorkerOptions> = {}): Pro
   return worker;
 }
 
-export async function readName(worker: Worker, image: ImageLike): Promise<string> {
-  const { data } = await worker.recognize(image);
-  return cleanName(data.text);
+interface Reading {
+  name: string;
+  confidence: number;
+}
+
+/**
+ * `renderings[v][i]` is cell i drawn with variant v. Each name uses its most confident reading;
+ * ties (often all zero, e.g. under a raid marker) go to the variant that read best across the screenshot.
+ */
+export async function readNames(
+  worker: Worker,
+  renderings: ImageLike[][],
+  onProgress: (done: number, total: number) => void = () => {},
+): Promise<string[]> {
+  const total = renderings.reduce((n, v) => n + v.length, 0);
+  let done = 0;
+  const readings: Reading[][] = [];
+  for (const variant of renderings) {
+    const out: Reading[] = [];
+    for (const image of variant) {
+      const { data } = await worker.recognize(image);
+      out.push({ name: cleanName(data.text), confidence: data.confidence });
+      onProgress(++done, total);
+    }
+    readings.push(out);
+  }
+
+  const average = (rs: Reading[]) => rs.reduce((s, r) => s + r.confidence, 0) / (rs.length || 1);
+  const ranked = [...readings].sort((a, b) => average(b) - average(a));
+  return (renderings[0] ?? []).map((_, i) => {
+    let best: Reading = { name: '', confidence: -1 };
+    for (const rs of ranked) {
+      if (rs[i].name && rs[i].confidence > best.confidence) best = rs[i];
+    }
+    return best.name;
+  });
 }

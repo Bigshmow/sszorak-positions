@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { CLASS_IDS, classColor, type ClassId } from '../classes';
 import { STRINGS, type Locale } from '../i18n';
 import type { Assignments } from '../types';
-import { analyzeCells, detectGrid, nameStrip, type Role } from './analyze';
+import { analyzeCells, detectGrid, nameStripVariants, type Role } from './analyze';
 import { autoFill, type RosterPlayer } from './autofill';
 import { blobToPixels, imageFromClipboard, pixelsToCanvas } from './browser';
 
@@ -61,19 +61,22 @@ export function ImportPanel({ locale, onFill, onClose }: ImportPanelProps) {
       setPlayers(initial);
       setStatus({ kind: 'reading', done: 0, total: initial.length });
 
-      const { createOcrWorker, readName } = await import('./ocr');
+      const { createOcrWorker, readNames } = await import('./ocr');
+      const variants = nameStripVariants(px, detected.map((d) => grid[d.row][d.col]));
       const worker = await createOcrWorker();
+      let names: string[];
       try {
-        for (const [i, d] of detected.entries()) {
-          if (runId.current !== id) return;
-          const name = await readName(worker, pixelsToCanvas(nameStrip(px, grid[d.row][d.col])));
-          setPlayers((prev) => prev.map((p, j) => (j === i && !p.name ? { ...p, name } : p)));
-          setStatus({ kind: 'reading', done: i + 1, total: detected.length });
-        }
+        names = await readNames(
+          worker,
+          variants.map((strips) => strips.map(pixelsToCanvas)),
+          (done, total) => runId.current === id && setStatus({ kind: 'reading', done, total }),
+        );
       } finally {
         await worker.terminate();
       }
-      if (runId.current === id) setStatus({ kind: 'ready' });
+      if (runId.current !== id) return;
+      setPlayers((prev) => prev.map((p, i) => (p.name ? p : { ...p, name: names[i] ?? '' })));
+      setStatus({ kind: 'ready' });
     } catch {
       if (runId.current === id) setStatus({ kind: 'error' });
     }

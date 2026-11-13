@@ -14,6 +14,16 @@ const EXPECTED_CLASSES = [
   ['mage', 'rogue', 'warlock', 'paladin', 'hunter'],
 ];
 
+const EXPECTED_CLASSES_STYLE_2 = [
+  ['paladin', 'deathknight', 'rogue', 'monk', 'warrior'],
+  ['shaman', 'warrior', 'rogue', 'mage', 'shaman'],
+  ['priest', 'shaman', 'paladin', 'warrior', 'priest'],
+  ['paladin', 'rogue', 'mage', 'hunter', 'warlock'],
+];
+
+const classGrid = (players: ReturnType<typeof analyzeCells>) =>
+  [0, 1, 2, 3].map((row) => players.filter((p) => p.row === row).map((p) => p.classId));
+
 const roleGrid = (players: ReturnType<typeof analyzeCells>) =>
   [0, 1, 2, 3].map((row) => players.filter((p) => p.row === row).map((p) => p.role));
 
@@ -25,13 +35,23 @@ describe('raid frame screenshot analysis', () => {
       expect(grid.length).toBe(4);
       grid.forEach((row) => expect(row.length).toBe(5));
 
-      const players = analyzeCells(px, grid);
-      const classes = [0, 1, 2, 3].map((row) =>
-        players.filter((p) => p.row === row).map((p) => p.classId),
-      );
-      expect(classes).toEqual(EXPECTED_CLASSES);
+      expect(classGrid(analyzeCells(px, grid))).toEqual(EXPECTED_CLASSES);
     });
   }
+
+  it('handles a frame style with centered names and white role glyphs', () => {
+    const px = load('raid-frames-3.png');
+    const grid = detectGrid(px);
+    expect(grid.map((row) => row.length)).toEqual([5, 5, 5, 5]);
+    const players = analyzeCells(px, grid);
+    expect(classGrid(players)).toEqual(EXPECTED_CLASSES_STYLE_2);
+    expect(roleGrid(players)).toEqual([
+      ['healer', 'tank', null, null, null],
+      ['healer', 'tank', null, null, null],
+      ['healer', 'healer', null, null, null],
+      [null, null, null, null, null],
+    ]);
+  });
 
   it('matches every class at different shading and grey-out levels', () => {
     const shades = [
