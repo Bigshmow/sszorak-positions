@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { CLASS_IDS, classColor, type ClassId } from '../classes';
 import { STRINGS, type Locale } from '../i18n';
-import type { Assignments } from '../types';
+import type { Assignments, Positions } from '../types';
 import { analyzeCells, detectGrid, nameStripVariants, type Role } from './analyze';
 import { autoFill, type RosterPlayer } from './autofill';
 import { blobToPixels, imageFromClipboard, pixelsToCanvas } from './browser';
@@ -21,11 +21,12 @@ const ROLES: Role[] = ['tank', 'healer', 'dps'];
 
 interface ImportPanelProps {
   locale: Locale;
+  positions: Positions;
   onFill: (assignments: Assignments) => void;
   onClose: () => void;
 }
 
-export function ImportPanel({ locale, onFill, onClose }: ImportPanelProps) {
+export function ImportPanel({ locale, positions, onFill, onClose }: ImportPanelProps) {
   const t = STRINGS[locale];
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const [players, setPlayers] = useState<ReviewPlayer[]>([]);
@@ -120,7 +121,7 @@ export function ImportPanel({ locale, onFill, onClose }: ImportPanelProps) {
         group: groupOf(p),
       }))
       .sort((a, b) => a.group - b.group);
-    onFill(autoFill(roster));
+    onFill(autoFill(roster, positions));
     onClose();
   };
 

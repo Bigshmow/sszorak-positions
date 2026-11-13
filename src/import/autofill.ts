@@ -1,6 +1,6 @@
 import type { ClassId } from '../classes';
-import { AUTO_FILL, BAIT_SLOT, STAY_OUT_SLOTS } from '../layout';
-import type { Assignments } from '../types';
+import { AUTO_FILL, BAIT_SLOT, BOSS, BOSS_ID, MAP_SLOTS, STAY_OUT_SLOTS } from '../layout';
+import type { Assignments, Positions } from '../types';
 import type { Role } from './analyze';
 
 export interface RosterPlayer {
@@ -23,21 +23,35 @@ function pickBait(players: RosterPlayer[]): RosterPlayer | undefined {
   return undefined;
 }
 
+type Side = 'left' | 'right';
+
 /**
- * Places a raid on the map: a ranged dps baits from spot 1, tanks take their side's tank spot,
- * odd groups fill the left side and even groups the right, and overflow goes to the middle.
- * Healers are also listed in the stay-out spots, since they don't stack before the spread.
+ * Splits the regular spots by which side of the boss they currently sit on (frames and the boss can
+ * be dragged), each ordered outside in: farthest from the boss first, then top to bottom.
  */
-export function autoFill(players: RosterPlayer[]): Assignments {
+function sidesFromBoss(positions: Positions): Record<Side, string[]> {
+  const boss = positions[BOSS_ID] ?? BOSS;
+  const named = new Set<string>([AUTO_FILL.baitSpot, ...Object.values(AUTO_FILL.tankSpots), ...AUTO_FILL.middle]);
+  const spots = MAP_SLOTS.filter((s) => !named.has(s.id)).map((s) => ({ id: s.id, ...(positions[s.id] ?? s) }));
+  const outsideIn = (side: Side) =>
+    spots
+      .filter((s) => (side === 'left' ? s.x < boss.x : s.x >= boss.x))
+      .sort((a, b) => Math.abs(b.x - boss.x) - Math.abs(a.x - boss.x) || a.y - b.y)
+      .map((s) => s.id);
+  return { left: outsideIn('left'), right: outsideIn('right') };
+}
+
+/**
+ * Places a raid on the map: a ranged dps baits from spot 1, tanks take their group's tank spot,
+ * odd groups fill the spots left of the boss and even groups the right (outside in), and overflow
+ * goes to the middle. Healers are also listed in the stay-out spots, since they don't stack before
+ * the spread.
+ */
+export function autoFill(players: RosterPlayer[], positions: Positions = {}): Assignments {
   const result: Assignments = {};
-  const free = new Set<string>([
-    AUTO_FILL.baitSpot,
-    AUTO_FILL.tankSpots.odd,
-    AUTO_FILL.tankSpots.even,
-    ...AUTO_FILL.sides.odd,
-    ...AUTO_FILL.sides.even,
-    ...AUTO_FILL.middle,
-  ]);
+  const sides = sidesFromBoss(positions);
+  const sideOf = (parity: Parity) => sides[AUTO_FILL.groupSides[parity]];
+  const free = new Set<string>(MAP_SLOTS.map((s) => s.id));
   const place = (spot: string, player: RosterPlayer) => {
     free.delete(spot);
     result[spot] = { name: player.name, classId: player.classId };
@@ -61,14 +75,17 @@ export function autoFill(players: RosterPlayer[]): Assignments {
     else unplaced.push(player);
   }
 
+  const overflow: RosterPlayer[] = [];
   for (const player of rest) {
     if (player.role === 'tank' && !unplaced.includes(player)) continue;
-    const parity = parityOf(player.group);
+    const spot = firstFree(sideOf(parityOf(player.group)));
+    if (spot) place(spot, player);
+    else overflow.push(player);
+  }
+
+  for (const player of overflow) {
     const spot =
-      firstFree(AUTO_FILL.sides[parity]) ??
-      firstFree(AUTO_FILL.middle) ??
-      firstFree(AUTO_FILL.sides[otherParity(parity)]) ??
-      firstFree([...free]);
+      firstFree(AUTO_FILL.middle) ?? firstFree(sideOf(otherParity(parityOf(player.group)))) ?? firstFree([...free]);
     if (spot) place(spot, player);
   }
 

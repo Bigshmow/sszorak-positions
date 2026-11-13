@@ -35,14 +35,31 @@ describe('autoFill', () => {
     expect(result.m19?.name).toBe('Sheldz');
   });
 
-  it('sends odd groups left, even groups right, overflow to the middle', () => {
-    expect(names(result, ['m2', 'm4', 'm7', 'm10', 'm12', 'm14', 'm16', 'm18'])).toEqual([
+  it('sends odd groups left of the boss and even groups right, outside in, overflow to the middle', () => {
+    expect(names(result, ['m10', 'm14', 'm4', 'm18', 'm7', 'm12', 'm2', 'm16'])).toEqual([
       'Zombyra', 'Theelyas', 'Tongpooh', 'Henyheny', 'Akassa', 'Alyzane', 'Betasha', 'Chairowar',
     ]);
-    expect(names(result, ['m3', 'm5', 'm8', 'm11', 'm13', 'm15', 'm17', 'm20'])).toEqual([
+    expect(names(result, ['m11', 'm5', 'm15', 'm20', 'm8', 'm13', 'm3', 'm17'])).toEqual([
       'Billetin', 'Galaen', 'Stormyen', 'Lumisara', 'Flexhack', 'Suggarquee', 'Ddpaladini', 'Skadi',
     ]);
     expect(result.m9?.name).toBe('Kasher');
+  });
+
+  it('follows frames that were dragged to the other side of the boss', () => {
+    const moved = autoFill(RAID, { m4: { x: 85, y: 30 } });
+    expect(moved.m4?.name).toBe('Billetin');
+  });
+
+  it('follows the boss when it is dragged, and gives each side its own groups before overflow', () => {
+    const moved = autoFill(RAID, { boss: { x: 30, y: 70 } });
+    expect(names(moved, ['m10', 'm14', 'm4'])).toEqual(['Zombyra', 'Theelyas', 'Tongpooh']);
+    expect(names(moved, ['m11', 'm5', 'm15', 'm20', 'm8', 'm13', 'm3', 'm17'])).toEqual([
+      'Billetin', 'Galaen', 'Stormyen', 'Lumisara', 'Flexhack', 'Suggarquee', 'Ddpaladini', 'Skadi',
+    ]);
+    expect(moved.m9?.name).toBe('Henyheny');
+    expect(names(moved, ['m16', 'm2', 'm12', 'm7', 'm18'])).toEqual([
+      'Akassa', 'Alyzane', 'Betasha', 'Chairowar', 'Kasher',
+    ]);
   });
 
   it('also lists the healers in the Out spots', () => {
@@ -65,6 +82,6 @@ describe('autoFill', () => {
   it('still fills spot 1 when nobody can bait, and leaves the bait box empty', () => {
     const r = autoFill(raid([[['Melee', 'rogue', 'dps']]]));
     expect(r.bait).toBeUndefined();
-    expect(Object.keys(r)).toEqual(['m2']);
+    expect(Object.keys(r)).toEqual(['m10']);
   });
 });

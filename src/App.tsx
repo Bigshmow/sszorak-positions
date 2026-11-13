@@ -271,7 +271,12 @@ export default function App() {
         </main>
       </div>
       {importOpen && (
-        <ImportPanel locale={locale} onFill={setAssignments} onClose={() => setImportOpen(false)} />
+        <ImportPanel
+          locale={locale}
+          positions={positions}
+          onFill={setAssignments}
+          onClose={() => setImportOpen(false)}
+        />
       )}
     </div>
   );
